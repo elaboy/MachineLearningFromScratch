@@ -21,43 +21,63 @@ class LogisticRegressionEstimator:
         # Initialize the weights
         self.weights = []
         for i in range(len(features[0])):
-            self.weights.append(0.1)
-        self.bias = 0.1
+            self.weights.append(random.uniform(0, 1))
+        self.bias = random.uniform(0, 1)
 
-        for iteration in range(self.max_iter):
-            print("iteration: " + str(iteration))
-            dot_product = 0
-            predictions = []
+        for iter in range(self.max_iter):
+            dot = []
             for i in range(len(features)):
-                p = self.theta_mult(features[i])
-                # Apply the sigmoid function
-                prediction = self.sigmoid_function(p)
+                row = []
+                for j in range(len(features[i])):
+                    row.append(features[i][j] * self.weights[j])
+                dot.append(row)
+            
+            y_pred = self.sigmoid(dot)
 
-                #Append prediction to the listtgood pass car 10 keep going
-                predictions.append(prediction)
-                
-                #calculate the gradient for the weights and bias
-            gradient_weights, gradient_bias = self.gradient_ascent(features, labels, predictions)
-            self.weights = gradient_weights
-            self.bias = gradient_bias
-            # #calculate the gradient for the weights and bias
-            # gradient_weights = []
-            # for j in range(len(features[i])):
-            #     gradient_weights.append((labels[i] - prediction) * features[i][j])
-            # gradient_bias = float(labels[i] - prediction)
+            grad = []
+            for i in range(len(y_pred)):
+                grad.append([(labels[i] - y_pred[i]) * k for k in range(len(features[i]))])
+            
+            #get the mean of the gradient
+            grad = [sum(x) / len(y_pred) for x in zip(*grad)]
 
-            # # Update the weights and bias
-            # newWeights = []
-            # for j in range(len(self.weights)):
-            #     newWeights.append(self.weights[j] + self.learning_rate * gradient_weights[j])
-            # self.weights = newWeights
+            self.weights = [self.weights[i] + self.learning_rate * grad[i] for i in range(len(self.weights))]
 
-            # self.bias = self.bias + self.learning_rate * gradient_bias
-            l = self.logLikehood(labels, features)
-            if l == None:
-                continue
-            self.likelihoods.append(l)
-            print("Log likelihood: " + str(l) + "\n")  
+            likeligood = self.logLikehood(labels, y_pred)
+        #for iteration in range(self.max_iter):
+        #    print("iteration: " + str(iteration))
+        #    dot_product = 0
+        #    predictions = []
+        #    for i in range(len(features)):
+        #        p = self.theta_mult(features[i])
+        #        # Apply the sigmoid function
+        #        prediction = self.sigmoid_function(p)
+#
+        #        #Append prediction to the listtgood pass car 10 keep going
+        #        predictions.append(prediction)
+        #        
+        #        #calculate the gradient for the weights and bias
+        #    gradient_weights, gradient_bias = self.gradient_ascent(features, labels, predictions)
+        #    self.weights = gradient_weights
+        #    self.bias = gradient_bias
+        #    # #calculate the gradient for the weights and bias
+        #    # gradient_weights = []
+        #    # for j in range(len(features[i])):
+        #    #     gradient_weights.append((labels[i] - prediction) * features[i][j])
+        #    # gradient_bias = float(labels[i] - prediction)
+#
+        #    # # Update the weights and bias
+        #    # newWeights = []
+        #    # for j in range(len(self.weights)):
+        #    #     newWeights.append(self.weights[j] + self.learning_rate * gradient_weights[j])
+        #    # self.weights = newWeights
+#
+        #    # self.bias = self.bias + self.learning_rate * gradient_bias
+        #    l = self.logLikehood(labels, features)
+        #    if l == None:
+        #        continue
+        #    self.likelihoods.append(l)
+        #    print("Log likelihood: " + str(l) + "\n")  
 
     def logLikehood(self, true_y, x):
         '''
@@ -129,7 +149,18 @@ class LogisticRegressionEstimator:
 
         return 1 / (1 + math.exp(result * -1))
 
-
+    def sigmoid(self, dot):
+        '''
+        The sigmoid function for the list.
+        '''
+        sigmoidResults = []
+        for i in range(len(dot)):
+            sigmoidResult = 0
+            for j in range(len(dot[i])):
+                sigmoidResult += self.weights[j] * dot[i][j]
+            sigmoidResults.append(1 / (1 + math.exp(sigmoidResult * -1)))
+        return  sigmoidResults
+        
 if(__name__ == '__main__'): 
     #Load training data
     #cols = Survived,Pclass,Sex,Age,Siblings/Spouses, Aboard,Parents/Children, Aboard,Fare
