@@ -90,22 +90,7 @@ class LogisticRegressionEstimator:
             
         return log_likelihood/len(true_y)
 
-    def gradient_ascent(self, features, true_y, y_hat):
-        '''
-        Perform gradient ascent.
-        '''
-        gradient_weights = self.weights
-        randomWeight = random.randint(0, len(self.weights) - 1)
-        gradient_weights[randomWeight] += self.learning_rate
-        #for i in range(len(self.weights)):
-         #   gradient_weights[i] = self.weights[i] + self.learning_rate 
 
-        gradient_bias = self.bias * self.learning_rate
-        #for i in range(len(features)):
-        #    for j in range(0, 6):
-        #        gradient_weights[j] += (true_y[i] - (1/1+(1/(self.theta_mult(features[i]))))) * features[i][j]
-        #    gradient_bias += float(true_y[i] - y_hat[i])
-        return gradient_weights, gradient_bias
     
     def predict(self, features):
         '''
