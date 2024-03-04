@@ -85,7 +85,9 @@ class LogisticRegressionEstimator:
         '''
         log_likelihood = 0
         for i in range(0, len(true_y)):
-            log_likelihood += ((true_y[i] * math.log(1/1+(1/self.theta_mult(x[i]))))) + ((1 - true_y[i]) * math.log(1/1+(1/self.theta_mult(x[i]))))
+            log_likelihood += ((true_y[i] * 
+                                math.log(1/1+(1/self.theta_mult(x[i]))))) + ((1 - true_y[i]) * 
+                                    math.log(1/1+(1/self.theta_mult(x[i]))))
             
             
         return log_likelihood/len(true_y)

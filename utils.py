@@ -78,12 +78,15 @@ def mutual_information(x: np.ndarray, y: np.ndarray) -> float:
 
 
 from enum import Enum
-
+import math
 class Tree():
     def __init__(self, features: np.ndarray, target: np.ndarray):
         self.features = features
         self.target = target
-        self.tree = self.sort_features_by_mutual_information()
+        self.sorted_nodes_by_I = self.sort_features_by_mutual_information()
+        self.leafs = self.get_leafs()
+        self.root = str(FeatureType(self.sorted_nodes_by_I[0][0])).split('.')[1]
+        self.tree = self.build_tree()
 
     def sort_features_by_mutual_information(self) -> np.ndarray:
         '''
@@ -98,23 +101,83 @@ class Tree():
                 transformed_numerical.append(transform(j))
             mutual_informations.append((i, mutual_information(transformed_numerical, self.target)))
         
-        return mutual_informations
+        return sorted(mutual_informations, key=lambda x: x[1], reverse=True)
 
-    def print_tree(self) -> None:
+    def print_category_mutual_info(self) -> None:
         '''
         Prints the tree.
         '''
-        tree = sorted(self.tree, key=lambda x: x[1], reverse=True)
-        for category, I in tree:
+        s = sorted(self.sorted_nodes_by_I, key=lambda x: x[1], reverse=True)
+        for category, I in self.sorted_nodes_by_I:
             category = FeatureType(category)
             print(f'{category}: {I}')
-    
-    def build_tree(self) -> np.ndarray:
+
+    def get_leafs(self) -> dict:
+        '''
+        Returns the leafs of the tree.
+        '''
+        leafs = []
+
+        for category in self.sorted_nodes_by_I:
+            leafs.append(str(FeatureType(category[0])).split('.')[1])
+        
+        leafs.pop(0)
+        return leafs
+
+    def build_tree(self) -> None:
         '''
         Builds a decision tree using the mutual information of the features.
         '''
+        features = []
+        for i in range(self.features.shape[1]):
+            features.append((FeatureType(i), self.features[:, i]))
+        tree = {}
+        for i in range(0, 6):
+            I, category, sorted_mutual_info = self.get_max_mutual_information(features)
+            tree[i] = (I, sorted_mutual_info)
+            for feature in features:
+                if feature[0] == category:
+                    features.remove(feature)
+                    break
         
+        return tree
+
+    def get_max_mutual_information(self, features: tuple) -> tuple:
+        '''
+        Returns the feature with the highest mutual information with the target variable.
+        '''
+        mututal_informations = []
+        for feature in features:
+            mututal_informations.append((feature[0], mutual_information(feature[1], self.target)))
+        
+        I = max(mututal_informations, key=lambda x: x[1])
+        category = I[0]
+        sorted_mutual_informations = sorted(mututal_informations, key=lambda x: x[1], reverse=True)
+        return   I, category, sorted_mutual_informations[1:]
     
+    def print_pretty_tree(self) -> None:
+        '''
+        Prints the tree. Indented levels represent the depth of the tree.
+        '''
+        for i in range(0, 6):
+            print(f'Level {i}: {str(self.tree[i][0][0]).split('.')[1]}')
+            for feature in self.tree[i][1]:
+                print(f'\t{str(feature[0]).split('.')[1]}')
+
+    def print_full_tree(self) -> None:
+        '''
+        Prints the tree.
+        '''
+        for category in self.leafs:
+            print(category)
+    
+class Leaf():
+    def __init__(self, category: str) -> None:
+        self.category = category
+
+    
+
+
 class FeatureType(Enum):
     PassengerClass = 0
     Gender = 1
@@ -122,7 +185,7 @@ class FeatureType(Enum):
     SiblingsSpousesAboard = 3
     ParentsChildrenAboard = 4
     Fare = 5
-
+    
 # def mutual_information_estimation(X: np.ndarray, Y: np.ndarray, bins: int = 10) -> float:
 #     '''
 #     Estimates the mutual information between two random variables X and Y.
